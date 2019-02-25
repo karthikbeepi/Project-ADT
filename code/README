@@ -1,0 +1,39 @@
+
+Prerequisites:
+
+cmake, opencv
+
+
+To compile in the lab
+——————————
+
+run ./lab_config.sh
+cd build
+make
+
+To compile on your own machine
+———
+
+cd build/
+cmake ../
+make
+
+
+To run
+——
+
+In the build folder:
+./sc image1 new_width new_height image2
+
+
+
+//My way of running
+
+cd Project\ ADT/Project\ ADT/code/
+g++ src/main.cpp `pkg-config --cflags --libs opencv`
+cd build/
+cmake ../
+make 
+./seg simple.png config.txt image2.png
+
+ 
