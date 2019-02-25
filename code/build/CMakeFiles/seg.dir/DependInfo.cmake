@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/kbeepi/Project ADT/Project ADT/code/src/main.cpp" "/home/kbeepi/Project ADT/Project ADT/code/build/CMakeFiles/seg.dir/src/main.o"
+  "/home/kbeepi/Project-ADT/code/src/main.cpp" "/home/kbeepi/Project-ADT/code/build/CMakeFiles/seg.dir/src/main.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
