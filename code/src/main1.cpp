@@ -450,8 +450,8 @@ while(v==true)
   }
 
   Vec3b pixel2;
-  pixel2[0] =0;
-  pixel2[1] = 0;
+  pixel2[0] =255;
+  pixel2[1] = 255;
   pixel2[2] = 255;
 
   queue < int > qcolor;
@@ -475,7 +475,7 @@ while(v==true)
             Vec3b pixel2;
               pixel2[0] = 0;
              pixel2[1] = 0;
-        pixel2[2] = 225;
+        pixel2[2] = 0;
         int x3, x4;
         x3 = (adlis[last][i].first) / width;
         x4 = (adlis[last][i].first) % width;
