@@ -165,8 +165,18 @@ int main( int argc, char** argv )
                 pixel[2] = 255;
                 pixel[0] = 0; 
                 out_image.at<Vec3b>(j, i) = pixel;
-                p[j][i] = 1;
+                p[j][i] = 9999;
             }            
+        }
+        ofstream fout;
+        fout.open("test.txt"); 
+        for(int i=0; i<width; i++)
+        {
+            for(int j=0; j<height; j++)
+            {
+                fout<<p[j][i];
+            }
+            fout<<"\n";
         }
     
     // write it on disk
