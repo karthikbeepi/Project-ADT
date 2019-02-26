@@ -1,12 +1,11 @@
-
-#include <opencv2/opencv.hpp>
+#include<opencv2/opencv.hpp>
 #include<fstream>
 #include <utility>
 #include<queue>
 #include<vector>
 
 
-  using namespace cv;
+using namespace cv;
 using namespace std;
 // checking is the pixel already present in path or not
 int check(int x, vector < int > cpath) {

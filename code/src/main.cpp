@@ -114,7 +114,8 @@ int main( int argc, char** argv )
     int delta = 0;
     int ddepth = CV_16S;
     src = imread( argv[1] );
-    //cvtColor( src, src_gray, COLOR_RGB2GRAY );
+    //cvtColor( src, src, COLOR_BGR2GRAY );
+    GaussianBlur( src, src, Size(25,25), 0, 0, BORDER_DEFAULT );
     Mat grad_x, grad_y;
     Mat abs_grad_x, abs_grad_y;
     Scharr( src, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
@@ -124,49 +125,23 @@ int main( int argc, char** argv )
     addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
         
     out_image = grad.clone();
-    int n;
-    f>>n;
-
-    // get the initial pixels
-    for(int i=0;i<n;++i){
-        
-        int x, y, t;
-        f>>x>>y>>t;
-        
-        if(x<0 || x>=width || y<0 || y>=height){
-            cout<<"Invalid pixel mask!"<<endl;
-            return -1;
-        }
-        
-        
-        Vec3b pixel;
-        
-        if(t==1){
-            pixel[1] = 255;
-            pixel[2] = 255;
-            pixel[0] = 255;
-        } else {
-
-            pixel[1] = 0;
-            pixel[2] = 0;
-            pixel[0] = 0;        }
-        
-        out_image.at<Vec3b>(y, x) = pixel;
-    }
-
+    
     int p[height][width];
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
         {
             Vec3b pixel= out_image.at<Vec3b>(j, i);
-            if(pixel[0]==0||pixel[1]==0||pixel[2]==0)
+            if(pixel[0]==0&&pixel[1]==0&&pixel[2]==0)
             {
-                pixel[1] = 0;
-                pixel[2] = 255;
-                pixel[0] = 0; 
-                out_image.at<Vec3b>(j, i) = pixel;
-                p[j][i] = 9999;
+                p[j][i] = 9999; 
             }            
+            else
+            {
+                pixel[1] = 255;
+                pixel[2] = 255;
+                pixel[0] = 255;
+                out_image.at<Vec3b>(j, i) = pixel;
+            }
         }
         ofstream fout;
         fout.open("test.txt"); 
@@ -179,6 +154,58 @@ int main( int argc, char** argv )
             fout<<"\n";
         }
     
+    int n;
+    f>>n;
+    int x, y, t;
+    // get the initial pixels
+    for(int i=0;i<n;++i){
+        
+        int x1, y1;
+        f>>x1>>y1>>t;
+        
+        if(x<0 || x>=width || y<0 || y>=height){
+            cout<<"Invalid pixel mask!"<<endl;
+            return -1;
+        }
+        if(t==1)
+        {
+            x = x1;
+            y = y1;
+        }
+    }
+
+    queue <pair<int, int>> q;
+    pair<int, int> p1 = {y,x};
+    q.push(p1);
+
+    while(!q.empty()){
+        p1 = q.front();
+        q.pop();
+        y = p1.first;
+        x = p1.second;
+        if(p[y][x]==0||x<0 || x>=width || y<0 || y>=height)
+        {
+            continue;
+        }
+        Vec3b pixel;
+        pixel[1] = 255;
+        pixel[2] = 255;
+        pixel[0] = 255; 
+        out_image.at<Vec3b>(y, x) = pixel;
+        p[y][x] = 0;
+        p1.first = y+1;
+        q.push(p1);
+        p1.first = y-1;
+        q.push(p1);
+        p1.first = y;
+        p1.second = x+1;
+        q.push(p1);
+        p1.second = x-1;
+        q.push(p1);
+    }
+    
+    
+
     // write it on disk
     imwrite( argv[3], out_image);
     
