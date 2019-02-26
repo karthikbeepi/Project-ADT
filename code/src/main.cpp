@@ -115,12 +115,14 @@ int main( int argc, char** argv )
     int ddepth = CV_16S;
     src = imread( argv[1] );
     //cvtColor( src, src, COLOR_BGR2GRAY );
-    GaussianBlur( src, src, Size(25,25), 0, 0, BORDER_DEFAULT );
+    GaussianBlur( src, src, Size(5,5), 0, 0, BORDER_DEFAULT );
     Mat grad_x, grad_y;
     Mat abs_grad_x, abs_grad_y;
-    Scharr( src, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
+    //Scharr( src, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
+    Sobel( src, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
     convertScaleAbs( grad_x, abs_grad_x );
-    Scharr( src, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
+    //Scharr( src, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
+    Sobel( src, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
     convertScaleAbs( grad_y, abs_grad_y );
     addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
         
@@ -213,10 +215,10 @@ int main( int argc, char** argv )
     
     namedWindow( "Original image", WINDOW_AUTOSIZE );
     namedWindow( "Show Marked Pixels", WINDOW_AUTOSIZE );
-   // namedWindow( "test", WINDOW_AUTOSIZE );
+    namedWindow( "test", WINDOW_AUTOSIZE );
     imshow( "Original image", in_image );
     imshow( "Show Marked Pixels", out_image );
-   // imshow( "test", in_image );
+    imshow( "test", grad );
     waitKey(0);
     return 0;
 }
