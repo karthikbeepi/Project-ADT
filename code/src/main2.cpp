@@ -125,12 +125,8 @@ int main( int argc, char** argv )
         for(int j=0; j<height; j++)
         {
             Vec3b pixel= out_image.at<Vec3b>(j, i);
-            if(pixel[0]<100&&pixel[1]<100&&pixel[2]<100)
+            if(pixel[0]==0&&pixel[1]==0&&pixel[2]==0)
             {
-                pixel[1] = 0;
-                pixel[2] = 0;
-                pixel[0] = 0;
-                out_image.at<Vec3b>(j, i) = pixel;
                 p[j][i] = 9999; 
             }      
                   
