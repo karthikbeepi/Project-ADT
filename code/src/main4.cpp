@@ -4,6 +4,66 @@
 
 using namespace cv;
 using namespace std;
+#define V 6 
+
+class Graph{
+
+	public:
+	bool hasPath(int g[V][V], int parent[], int s, int t) 
+	{ 
+		bool vis[V]; 
+		for(int i=0; i<V; i++)
+			vis[i]=false;
+		queue <int> q; 
+		q.push(s); 
+		vis[s] = true; 
+		parent[s] = -1; 
+		while (!q.empty()) 
+		{ 
+			int u = q.front(); 
+			q.pop(); 
+
+			for (int v=0; v<V; v++) 
+			{ 
+				if (vis[v]==false && g[u][v] > 0) 
+				{ 
+					q.push(v); 
+					parent[v] = u; 
+					vis[v] = true; 
+				} 
+			} 
+		} 
+
+		return (vis[t] == true); 
+	} 
+	int findMinCut(int g[V][V], int src, int snk) 
+	{ 
+		int u,v;
+		int graph[V][V];
+		for (int i = 0; i < V; i++) 
+			for (int j = 0; j < V; j++) 
+				graph[i][j] = g[i][j]; 
+		int parent[V]; 
+		int flow = 0; 
+		while (hasPath(graph, parent, src, snk)) 
+		{ 
+			int path_flow = 9999;
+			for (v=snk; v!=src; v=parent[v]) 
+			{ 
+				u = parent[v]; 
+				path_flow = min(path_flow, graph[u][v]); 
+			} 
+			for (v=snk; v != src; v=parent[v]) 
+			{ 
+				u = parent[v]; 
+				graph[u][v] -= path_flow; 
+				graph[v][u] += path_flow; 
+			} 
+			flow += path_flow; 
+		} 
+		return flow; 
+	}
+} ;
 
 
 int main( int argc, char** argv )
@@ -14,6 +74,7 @@ int main( int argc, char** argv )
     }
     
     // Load the input image
+    // the image should be a 3 channel image by default but we will double check that in teh seam_carving
     Mat in_image;
     in_image = imread(argv[1], CV_LOAD_IMAGE_COLOR);
    
@@ -39,6 +100,7 @@ int main( int argc, char** argv )
     
     int width = in_image.cols;
     int height = in_image.rows;    
+
     Mat src;
     Mat grad;
     int scale = 1;
@@ -57,76 +119,39 @@ int main( int argc, char** argv )
     convertScaleAbs( grad_y, abs_grad_y );
     addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
     
-    out_image = src.clone();
-    int maxVal = -1;
+    out_image = grad.clone();
     int p[height][width];
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
         {
-            Vec3b pixel1 = out_image.at<Vec3b>(j, i);
-            p[j][i] = (int) (pixel1[0] +  pixel1[1] + pixel1[2])/3;
-            if(maxVal<p[j][i])
-                maxVal = p[j][i];
-        }
-    int edgeVal[height][width][4];
-    for(int i=0; i<width; i++)
-        for(int j=0; j<height; j++)
-        {
-            //i, j, i, j-1 U 0
-            if(j-1>=0)
+            Vec3b pixel= out_image.at<Vec3b>(j, i);
+            if(pixel[0]<100&&pixel[1]<100&&pixel[2]<100)
             {
-                edgeVal[j][i][0] = maxVal - (p[j-1][i]-p[j][i]);
-            }
+                p[j][i] = 9999; 
+            }      
             else
             {
-                edgeVal[j][i][0] = 0;
-            }
-            
-
-            //i, j, i, j+1 D 1
-            if(j+1<=height)
-            {
-                edgeVal[j][i][1] = maxVal - ( p[j+1][i]-p[j][i]);
-            }
-
-            else
-            {
-                edgeVal[j][i][1] = 0;
-            }
-
-            //i, j, i-1, j L 2
-            if(i-1>=0)
-            {
-                edgeVal[j][i][2] = maxVal - (p[j][i-1]-p[j][i]);
-            }
-
-            else
-            {
-                edgeVal[j][i][2] = 0;
-            }
-
-            //i, j, i+1, j R 3
-            if(i+1<=width)
-            {
-                edgeVal[j][i][3] = maxVal - (p[j][i+1]-p[j][i]);
-            }
-
-            else
-            {
-                edgeVal[j][i][3] = 0;
+                p[j][i]=0;
             }
         }
-    ofstream fout;
-    fout.open("test.txt"); 
-    for(int i=0; i<width; i++)
-    {
-        for(int j=0; j<height; j++)
-        {
-                fout<<edgeVal[j][i][0];
-        }
-        fout<<"\n";
-    }
+        // ofstream fout;
+        // fout.open("test.txt"); 
+        // for(int i=0; i<width; i++)
+        // {
+        //     for(int j=0; j<height; j++)
+        //     {
+        //         fout<<p[j][i];
+        //     }
+        //     fout<<"\n";
+        // }
+    
+    Mat out_image2;
+    out_image2 = Mat::zeros(out_image.rows, out_image.cols, CV_8UC3);
 
+    int n;
+    f>>n;
+    int x, y, t;
+    // get the initial pixels
     for(int i=0;i<n;++i)
     {
         int x1, y1;
@@ -176,14 +201,17 @@ int main( int argc, char** argv )
         }
     }
 
+    
     // write it on disk
     imwrite( argv[3], out_image);
     
     // also display them both
     namedWindow( "Original image", WINDOW_AUTOSIZE );
     namedWindow( "Show Marked Pixels", WINDOW_AUTOSIZE );
+    namedWindow( "test", WINDOW_AUTOSIZE );
     imshow( "Original image", in_image );
     imshow( "Show Marked Pixels", out_image );
+    imshow( "test", out_image2 );
     waitKey(0);
 
     return 0;
