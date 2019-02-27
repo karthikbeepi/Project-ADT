@@ -4,4 +4,4 @@ g++ src/main1.cpp `pkg-config --cflags --libs opencv`
 cd build/
 cmake ../
 make
-./seg large.jpg config1.txt image.png
+./seg large8.png config1.txt image.png

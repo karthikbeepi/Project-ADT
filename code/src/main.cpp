@@ -127,20 +127,19 @@ int main( int argc, char** argv )
             Vec3b pixel= out_image.at<Vec3b>(j, i);
             if(pixel[0]<100&&pixel[1]<100&&pixel[2]<100)
             {
-                pixel[1] = 0;
-                pixel[2] = 0;
-                pixel[0] = 0;
-                out_image.at<Vec3b>(j, i) = pixel;
+                // pixel[1] = 0;
+                // pixel[2] = 0;
+                // pixel[0] = 0;
+                // out_image.at<Vec3b>(j, i) = pixel;
                 p[j][i] = 9999; 
             }      
-                  
             else
             {
                 p[j][i]=0;
-                pixel[1] = 255;
-                pixel[2] = 255;
-                pixel[0] = 255;
-                out_image.at<Vec3b>(j, i) = pixel;
+                // pixel[1] = 255;
+                // pixel[2] = 255;
+                // pixel[0] = 255;
+                // out_image.at<Vec3b>(j, i) = pixel;
             }
         }
         ofstream fout;
@@ -174,13 +173,15 @@ int main( int argc, char** argv )
         }
     }
 
-    queue <pair<int, int>> q;
-    pair<int, int> p1 = {y,x};
+    queue <pair<int, int> > q;
+    pair<int, int> p1 = make_pair(y, x);
     q.push(p1);
 
-    Mat out_image2 = out_image.clone();
+    Mat out_image2;
+    out_image2 = Mat::zeros(out_image.rows, out_image.cols, CV_8UC3);
 
-    while(!q.empty()){
+    while(!q.empty())
+    {
         p1 = q.front();
         q.pop();
         y = p1.first;

@@ -133,7 +133,6 @@ int main( int argc, char** argv )
                 out_image.at<Vec3b>(j, i) = pixel;
                 p[j][i] = 9999; 
             }      
-                  
             else
             {
                 p[j][i]=0;
@@ -174,13 +173,14 @@ int main( int argc, char** argv )
         }
     }
 
-    queue <pair<int, int>> q;
-    pair<int, int> p1 = {y,x};
+    queue <pair<int, int> > q;
+    pair<int, int> p1 = make_pair(y, x);
     q.push(p1);
 
     Mat out_image2 = out_image.clone();
 
-    while(!q.empty()){
+    while(!q.empty())
+    {
         p1 = q.front();
         q.pop();
         y = p1.first;
