@@ -5,24 +5,26 @@
 using namespace cv;
 using namespace std;
 
-int edgeVal[1000][1000][4];
-int parent[1000][1000];
+int edgeVal[700][500][4];
+int parent[700][500];
+bool vis[700][500];
 
 bool hasPath(int src[2], int snk[2], int width, int height )
 {
-    bool vis[1000][1000];
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
         {
-            vis[i][j]=false;
+            vis[j][i]=false;
         }
     queue <pair<int, int> > q;
     pair<int, int> p1 = make_pair(src[0], src[1]);
     q.push(p1);
     int x, y;
-    vis[src[0]][src[1]] = true;
+   // vis[src[0]][src[1]] = true;
     parent[src[0]][src[1]] = -1;
+    
     while(!q.empty()){
+        
         p1 = q.front();
         q.pop();
         y = p1.first;
@@ -30,7 +32,6 @@ bool hasPath(int src[2], int snk[2], int width, int height )
         if(vis[y][x]==true||x<0 || x>=width || y<0 || y>=height)
             continue;
         vis[y][x] = true;
-        
         if(y+1<height&&vis[y+1][x]==false)
         {
             p1.first = y+1;
@@ -59,12 +60,15 @@ bool hasPath(int src[2], int snk[2], int width, int height )
             q.push(p1);
             parent[y][x-1] = 3;
         }
-
     }
 
-    return vis[snk[0]][snk[1]];
-
-    
+    if( vis[snk[0]][snk[1]]==true)
+        return true;
+    else
+    {
+        return false;
+    }
+        
 }
 
 void findCut(int x[], int y[], int t[], int n, int width, int height)
@@ -93,15 +97,17 @@ void findCut(int x[], int y[], int t[], int n, int width, int height)
     snk[1] = x[1];
     while(hasPath(src, snk, width, height))
     {
-        int flow = 9999;
-        int y1, x1;
+        int flow = 99999;
+        int y1, x1, temp;
         y1 = snk[0];
         x1 = snk[1];
         while(y1!=src[0]&&x1!=src[1]){
-            int temp = parent[y1][x1];
+            temp = parent[y1][x1];
             flow = std::min(flow, edgeVal[y1][x1][temp]);
+            
             switch (temp)
             {
+
                 case 0: y1--;
                     break;
                 case 1: y1++;
@@ -117,13 +123,13 @@ void findCut(int x[], int y[], int t[], int n, int width, int height)
             int y2, x2;
             switch (temp)
             {
-                case 0: y2= y1-1; x2= x1;
+                case 0: y2= y1+1; x2= x1;
                     break;
-                case 1: y2=y1+1; x2=x1;
+                case 1: y2=y1-1; x2=x1;
                     break;
-                case 2: x2=x1-1; y2=y1;
+                case 2: x2=x1+1; y2=y1;
                     break;
-                case 3: x2=x1+1; y2=y1;
+                case 3: x2=x1-1; y2=y1;
                     break;
             }
             edgeVal[y1][x1][temp] -= flow;
@@ -138,9 +144,11 @@ void findCut(int x[], int y[], int t[], int n, int width, int height)
                 case 3: edgeVal[y2][x2][2] -=flow;
                     break;
             }
-
         }
+      //  cout<<flow;
+      break;
     }
+
 }
 
 int main( int argc, char** argv )
