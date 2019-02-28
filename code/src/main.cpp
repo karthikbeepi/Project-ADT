@@ -5,6 +5,143 @@
 using namespace cv;
 using namespace std;
 
+int edgeVal[1000][1000][4];
+int parent[1000][1000];
+
+bool hasPath(int src[2], int snk[2], int width, int height )
+{
+    bool vis[1000][1000];
+    for(int i=0; i<width; i++)
+        for(int j=0; j<height; j++)
+        {
+            vis[i][j]=false;
+        }
+    queue <pair<int, int> > q;
+    pair<int, int> p1 = make_pair(src[0], src[1]);
+    q.push(p1);
+    int x, y;
+    vis[src[0]][src[1]] = true;
+    parent[src[0]][src[1]] = -1;
+    while(!q.empty()){
+        p1 = q.front();
+        q.pop();
+        y = p1.first;
+        x = p1.second;
+        if(vis[y][x]==true||x<0 || x>=width || y<0 || y>=height)
+            continue;
+        vis[y][x] = true;
+        
+        if(y+1<height&&vis[y+1][x]==false)
+        {
+            p1.first = y+1;
+            q.push(p1);
+            parent[y+1][x] = 0;
+        }
+        
+        if(y-1>=0&&vis[y-1][x]==false)
+        {
+            p1.first = y-1;
+            q.push(p1);
+            parent[y-1][x] = 1;
+        }
+        
+        if(x+1<width&&vis[y][x+1]==false)
+        {
+            p1.first = y;
+            p1.second = x+1;
+            q.push(p1);
+            parent[y][x+1] = 2;
+        }
+        
+        if(x-1>=0&&vis[y][x-1]==false)
+        {
+            p1.second = x-1;
+            q.push(p1);
+            parent[y][x-1] = 3;
+        }
+
+    }
+
+    return vis[snk[0]][snk[1]];
+
+    
+}
+
+void findCut(int x[], int y[], int t[], int n, int width, int height)
+{
+    // int src[10][2];
+    // int snk[10][2];
+    // int srcCount =0;
+    // int snkCount =0;
+    // for(int i=0; i<n; i++)
+    // {
+    //     if(t[i]==1)
+    //     {
+    //         src[srcCount++][0] = x[i];
+    //         src[srcCount++][1] = y[i];
+    //     } 
+    //     else
+    //     {
+    //         snk[snkCount++][0] = x[i];
+    //         snk[snkCount++][1] = y[i];
+    //     }
+    // }
+    int src[2], snk[2];
+    src[0] = y[0];
+    src[1] = x[0];
+    snk[0] = y[1];
+    snk[1] = x[1];
+    while(hasPath(src, snk, width, height))
+    {
+        int flow = 9999;
+        int y1, x1;
+        y1 = snk[0];
+        x1 = snk[1];
+        while(y1!=src[0]&&x1!=src[1]){
+            int temp = parent[y1][x1];
+            flow = std::min(flow, edgeVal[y1][x1][temp]);
+            switch (temp)
+            {
+                case 0: y1--;
+                    break;
+                case 1: y1++;
+                    break;
+                case 2: x1--;
+                    break;
+                case 3: x1++;
+                    break;
+            }
+        }
+        while(y1!=src[0]&&x1!=src[1]){
+            int temp = parent[y1][x1];
+            int y2, x2;
+            switch (temp)
+            {
+                case 0: y2= y1-1; x2= x1;
+                    break;
+                case 1: y2=y1+1; x2=x1;
+                    break;
+                case 2: x2=x1-1; y2=y1;
+                    break;
+                case 3: x2=x1+1; y2=y1;
+                    break;
+            }
+            edgeVal[y1][x1][temp] -= flow;
+            switch (temp)
+            {
+                case 0: edgeVal[y2][x2][1] -=flow;
+                    break;
+                case 1: edgeVal[y2][x2][0] -=flow;
+                    break;
+                case 2: edgeVal[y2][x2][3] -=flow;
+                    break;
+                case 3: edgeVal[y2][x2][2] -=flow;
+                    break;
+            }
+
+        }
+    }
+}
 
 int main( int argc, char** argv )
 {
@@ -40,22 +177,7 @@ int main( int argc, char** argv )
     int width = in_image.cols;
     int height = in_image.rows;    
     Mat src;
-    Mat grad;
-    int scale = 1;
-    int delta = 0;
-    int ddepth = CV_16S;
     src = imread( argv[1] );
-    GaussianBlur( src, src, Size(3,3), 0, 0, BORDER_DEFAULT );
-    //cvtColor( src, src, CV_BGR2GRAY );
-    Mat grad_x, grad_y;
-    Mat abs_grad_x, abs_grad_y;
-    Scharr( src, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
-    //Sobel( src, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
-    convertScaleAbs( grad_x, abs_grad_x );
-    Scharr( src, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
-    //Sobel( src, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
-    convertScaleAbs( grad_y, abs_grad_y );
-    addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
     
     out_image = src.clone();
     int maxVal = -1;
@@ -68,7 +190,7 @@ int main( int argc, char** argv )
             if(maxVal<p[j][i])
                 maxVal = p[j][i];
         }
-    int edgeVal[height][width][4];
+    
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
         {
@@ -76,6 +198,8 @@ int main( int argc, char** argv )
             if(j-1>=0)
             {
                 edgeVal[j][i][0] = maxVal - (p[j-1][i]-p[j][i]);
+                // edgeVal[j][i][0] *= edgeVal[j][i][0];
+                // edgeVal[j][i][0] *= edgeVal[j][i][0];
             }
             else
             {
@@ -87,6 +211,8 @@ int main( int argc, char** argv )
             if(j+1<=height)
             {
                 edgeVal[j][i][1] = maxVal - ( p[j+1][i]-p[j][i]);
+                // edgeVal[j][i][1] *= edgeVal[j][i][0];
+                // edgeVal[j][i][1] *= edgeVal[j][i][0];
             }
 
             else
@@ -98,6 +224,8 @@ int main( int argc, char** argv )
             if(i-1>=0)
             {
                 edgeVal[j][i][2] = maxVal - (p[j][i-1]-p[j][i]);
+                // edgeVal[j][i][2] *= edgeVal[j][i][0];
+                // edgeVal[j][i][2] *= edgeVal[j][i][0];
             }
 
             else
@@ -109,6 +237,8 @@ int main( int argc, char** argv )
             if(i+1<=width)
             {
                 edgeVal[j][i][3] = maxVal - (p[j][i+1]-p[j][i]);
+                // edgeVal[j][i][3] *= edgeVal[j][i][0];
+                // edgeVal[j][i][3] *= edgeVal[j][i][0];
             }
 
             else
@@ -127,55 +257,51 @@ int main( int argc, char** argv )
         fout<<"\n";
     }
 
+    int n;
+    f>>n;
+    int x1[n], y1[n], t1[n];
     for(int i=0;i<n;++i)
     {
-        int x1, y1;
-        f>>x1>>y1>>t;
-        
-        if(x1<0 || x1>=width || y1<0 || y1>=height){
+        f>>x1[i]>>y1[i]>>t1[i];
+        if(x1[i]<=0 || x1[i]>=width || y1[i]<=0 || y1[i]>=height){
             cout<<"Invalid pixel mask!"<<endl;
             return -1;
         }
-        if(t==1)
-        {
-            x = x1;
-            y = y1;
-            queue <pair<int, int> > q;
-            pair<int, int> p1 = make_pair(y, x);
-            q.push(p1);
-
-            
-            while(!q.empty())
-            {
-                p1 = q.front();
-                q.pop();
-                y = p1.first;
-                x = p1.second;
-                if(p[y][x]==0||x<0 || x>=width || y<0 || y>=height)
-                {
-                    continue;
-                }
-                Vec3b pixel;
-                pixel[1] = 255;
-                pixel[2] = 255;
-                pixel[0] = 255; 
-                out_image2.at<Vec3b>(y, x) = pixel;
-                p[y][x] = 0;
-                p1.first = y+1;
-                q.push(p1);
-                p1.first = y-1;
-                q.push(p1);
-                p1.first = y;
-                p1.second = x+1;
-                q.push(p1);
-                p1.second = x-1;
-                q.push(p1);
-                
-            }
-    
-        }
     }
 
+    findCut(x1, y1, t1, n, width, height);
+
+    queue <pair<int, int> > q;
+    pair<int, int> p1 = make_pair(y1[1], x1[1]);
+    q.push(p1);
+    int x, y;
+    Mat out_image2 = Mat::zeros(out_image.rows, out_image.cols, CV_8UC3);
+    while(!q.empty())
+    {
+            p1 = q.front();
+            q.pop();
+            y = p1.first;
+            x = p1.second;
+            if(p[y][x]==0||x<0 || x>=width || y<0 || y>=height)
+                continue;
+            Vec3b pixel;
+            pixel[1] = 255;
+            pixel[2] = 255;
+            pixel[0] = 255; 
+            out_image2.at<Vec3b>(y, x) = pixel;
+            p[y][x] = 0;
+            p1.first = y+1;
+            q.push(p1);
+            p1.first = y-1;
+            q.push(p1);
+            p1.first = y;
+            p1.second = x+1;
+            q.push(p1);
+            p1.second = x-1;
+            q.push(p1);
+    }
+
+    
     // write it on disk
     imwrite( argv[3], out_image);
     
