@@ -1,15 +1,12 @@
-#include <opencv2/opencv.hpp>
 #include<iostream>
-#include<fstream>
-
-using namespace cv;
+#include<queue>
 using namespace std;
 
 int edgeVal[700][500][4];
 int parent[700][500];
 bool vis[700][500];
 
-bool hasPath(int src[], int snk[], int width, int height )
+bool hasPath(int src[2], int snk[2], int width, int height )
 {
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
@@ -69,7 +66,7 @@ bool hasPath(int src[], int snk[], int width, int height )
         
 }
 
-void findCut(int x[], int y[], int t[],int n, int width, int height)
+void findCut(int x[], int y[], int n, int width, int height)
 {
     int src[2], snk[2];
     src[0] = y[0];
@@ -150,55 +147,17 @@ void findCut(int x[], int y[], int t[],int n, int width, int height)
     
 }
 
-
-int main( int argc, char** argv )
+int main(int argc, char * argv[])
 {
-    if(argc!=4){
-        cout<<"Usage: ../seg input_image initialization_file output_mask"<<endl;
-        return -1;
-    }
-    
-    // Load the input image
-    Mat in_image;
-    in_image = imread(argv[1], CV_LOAD_IMAGE_COLOR);
-   
-    if(!in_image.data)
-    {
-        cout<<"Could not load input image!!!"<<endl;
-        return -1;
-    }
 
-    if(in_image.channels()!=3){
-        cout<<"Image does not have 3 channels!!! "<<in_image.depth()<<endl;
-        return -1;
-    }
-    
-    // the output image
-    Mat out_image = in_image.clone();
-   // Mat out_image;
-    ifstream f(argv[2]);
-    if(!f){
-        cout<<"Could not load initial mask file!!!"<<endl;
-        return -1;
-    }
-    
-    int width = in_image.cols;
-    int height = in_image.rows;    
-    Mat src;
-    src = imread( argv[1] );
-    
-    out_image = src.clone();
-    int maxVal = -1;
-    int p[height][width];
-    for(int i=0; i<width; i++)
-        for(int j=0; j<height; j++)
-        {
-            Vec3b pixel1 = out_image.at<Vec3b>(j, i);
-            p[j][i] = (int) (pixel1[0] +  pixel1[1] + pixel1[2])/3;
-            if(maxVal<p[j][i])
-                maxVal = p[j][i];
-        }
-    
+    int p[5][5] = {     {3, 1, 1, 1, 1}, 
+						{1, 1, 1, 1, 1}, 
+						{1, 1, 1, 1, 1}, 
+						{1, 1, 1, 1, 1}, 
+						{1, 1, 1, 1, 3} 
+					}; 
+    int maxVal = 3;
+    int width = 5, height = 5;
     for(int i=0; i<width; i++)
     {
         for(int j=0; j<height; j++)
@@ -260,105 +219,15 @@ int main( int argc, char** argv )
             }
         }
     }
+    int x[2] = {4, 0};
+    int y[2] = {4, 0};
     
-    int n;
-    f>>n;
-    int x1[n], y1[n], t1[n];
-    for(int i=0;i<n;++i)
-    {
-        f>>x1[i]>>y1[i]>>t1[i];
-        if(x1[i]<=0 || x1[i]>=width || y1[i]<=0 || y1[i]>=height){
-            cout<<"Invalid pixel mask!"<<endl;
-            return -1;
-        }
-    }
 
-
-    ofstream fout;
-    fout.open("test1.txt"); 
-    for(int i=0; i<width; i++)
-    {
-        for(int j=0; j<height; j++)
-        {
-                fout<<edgeVal[j][i][1];
-        }
-        fout<<"\n";
-    }
-    fout.close();
-    findCut(x1, y1, t1, n, width, height);
-
-    fout.open("test.txt"); 
-    for(int i=0; i<width; i++)
-    {
-        for(int j=0; j<height; j++)
-        {
-                fout<<edgeVal[j][i][1]<<" ";
-        }
-        fout<<"\n";
-    }
-    fout.close();
-
-    bool vis[height][width];
-    for(int i=0; i<width; i++)
-        for(int j=0; j<height; j++)
-        {
-            vis[j][i] = false;
-        }
-    queue <pair<int, int> > q;
-    pair<int, int> p1 = make_pair(y1[0], x1[0]);
-    q.push(p1);
-    int x, y;
-    Mat out_image2 = Mat::zeros(out_image.rows, out_image.cols, CV_8UC3);
-    while(!q.empty())
-    {
-            p1 = q.front();
-            q.pop();
-            y = p1.first;
-            x = p1.second;
-            if(vis[y][x]==true||x<0 || x>=width || y<0 || y>=height)
-                continue;
-            Vec3b pixel;
-            pixel[1] = 255;
-            pixel[2] = 255;
-            pixel[0] = 255; 
-            out_image2.at<Vec3b>(y, x) = pixel;
-            vis[y][x] = true;
-            if(edgeVal[y][x][1]>0)
-            {
-                p1.first = y+1;
-                q.push(p1);
-            }
-
-            if(edgeVal[y][x][0]>0)
-            {
-                p1.first = y-1;
-                q.push(p1);
-            }
-
-            if(edgeVal[y][x][3]>0)
-            {
-                p1.first = y;
-                p1.second = x+1;
-                q.push(p1);
-            }
-
-            if(edgeVal[y][x][2]>0)
-            {
-                p1.second = x-1;
-                q.push(p1);
-            }
-    }
+    findCut(x, y, 5, width, height);
 
     
-    // write it on disk
-    imwrite( argv[3], out_image);
+    int sr[2] = {4, 4};
+    int sn[2] = {0, 1};
+    cout<<hasPath(sr, sn, width, height);
     
-    // also display them both
-    namedWindow( "Original image", WINDOW_AUTOSIZE );
-    namedWindow( "Show Marked Pixels", WINDOW_AUTOSIZE );
-    imshow( "Original image", in_image );
-    imshow( "Show Marked Pixels", out_image2 );
-    waitKey(0);
-
-    return 0;
 }
