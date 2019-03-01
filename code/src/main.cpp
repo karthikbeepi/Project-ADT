@@ -186,17 +186,35 @@ int main( int argc, char** argv )
     int height = in_image.rows;    
     Mat src;
     src = imread( argv[1] );
-    
-    out_image = src.clone();
-    int maxVal = -1;
+    int scale = 1;
+    int delta = 0;
+    int ddepth = CV_16S;
+    GaussianBlur( src, src, Size(3,3), 0, 0, BORDER_DEFAULT );
+    Mat grad_x, grad_y, grad;
+    Mat abs_grad_x, abs_grad_y;
+    Scharr( src, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
+    //Sobel( src, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+    convertScaleAbs( grad_x, abs_grad_x );
+    Scharr( src, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
+    //Sobel( src, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
+    convertScaleAbs( grad_y, abs_grad_y );
+    addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
+    out_image= grad.clone();
+    int maxVal = 9999;
+    out_image = grad.clone();
     int p[height][width];
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
         {
-            Vec3b pixel1 = out_image.at<Vec3b>(j, i);
-            p[j][i] = (int) (pixel1[0] +  pixel1[1] + pixel1[2])/3;
-            if(maxVal<p[j][i])
-                maxVal = p[j][i];
+            Vec3b pixel= out_image.at<Vec3b>(j, i);
+            if(pixel[0]<100&&pixel[1]<100&&pixel[2]<100)
+            {
+                p[j][i] = 9999; 
+            }      
+            else
+            {
+                p[j][i]=1;
+            }
         }
     
     for(int i=0; i<width; i++)

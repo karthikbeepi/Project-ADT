@@ -150,11 +150,11 @@ void findCut(int x[], int y[], int n, int width, int height)
 int main(int argc, char * argv[])
 {
 
-    int p[5][5] = {     {3, 1, 1, 1, 1}, 
-						{1, 1, 1, 1, 1}, 
-						{1, 1, 1, 1, 1}, 
-						{1, 1, 1, 1, 1}, 
-						{1, 1, 1, 1, 3} 
+    int p[5][5] = {     {9, 9, 9, 9, 1}, 
+						{9, 9, 9, 1, 9}, 
+						{9, 9, 1, 9, 9}, 
+						{9, 1, 9, 9, 9}, 
+						{1, 9, 9, 9, 9} 
 					}; 
     int maxVal = 3;
     int width = 5, height = 5;
@@ -219,15 +219,23 @@ int main(int argc, char * argv[])
             }
         }
     }
-    int x[2] = {4, 0};
-    int y[2] = {4, 0};
+    int x[2] = {0, 4};
+    int y[2] = {0, 4};
     
 
     findCut(x, y, 5, width, height);
 
     
     int sr[2] = {4, 4};
-    int sn[2] = {0, 1};
+    int sn[2] = {3, 4};
     cout<<hasPath(sr, sn, width, height);
+    for(int i=0; i<width; i++)
+    {
+        for(int j=0; j<height; j++)
+        {
+                cout<<edgeVal[j][i][0];
+        }
+        cout<<"\n";
+    }
     
 }
