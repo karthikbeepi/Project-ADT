@@ -161,7 +161,7 @@ int main( int argc, char** argv )
             cout<<"Invalid pixel mask!"<<endl;
             return -1;
         }
-        if(t==0)
+        if(t==1)
         {
             x = x1;
             y = y1;
@@ -181,9 +181,9 @@ int main( int argc, char** argv )
                     continue;
                 }
                 Vec3b pixel;
-                pixel[1] = 0;
-                pixel[2] = 0;
-                pixel[0] = 0; 
+                pixel[1] = 255;
+                pixel[2] = 255;
+                pixel[0] = 255; 
                 out_image2.at<Vec3b>(y, x) = pixel;
                 p[y][x] = 0;
                 p1.first = y+1;

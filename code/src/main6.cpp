@@ -5,9 +5,9 @@
 using namespace cv;
 using namespace std;
 
-int edgeVal[2500][2000][4];
-int parent[2500][2000];
-bool vis[2500][2000];
+int edgeVal[700][500][4];
+int parent[700][500];
+bool vis[700][500];
 
 bool hasPath(int src[], int snk[], int width, int height )
 {
@@ -202,7 +202,7 @@ int main( int argc, char** argv )
     out_image= grad.clone();
     int maxVal = 9999;
     out_image = grad.clone();
-    int p[height+1][width+1];
+    int p[height][width];
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
         {
@@ -300,10 +300,7 @@ int main( int argc, char** argv )
             vis[j][i] = false;
         }
     queue <pair<int, int> > q;
-    int i=0;
-    while(t1[i]!=1)
-        i++;
-    pair<int, int> p1 = make_pair(y1[i], x1[i]);
+    pair<int, int> p1 = make_pair(y1[0], x1[0]);
     q.push(p1);
     int x, y;
     Mat out_image2 = Mat::zeros(out_image.rows, out_image.cols, CV_8UC3);
