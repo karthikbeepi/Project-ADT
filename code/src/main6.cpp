@@ -5,9 +5,9 @@
 using namespace cv;
 using namespace std;
 
-int edgeVal[700][500][4];
-int parent[700][500];
-bool vis[700][500];
+int edgeVal[2500][2000][4];
+int parent[2500][2000];
+bool vis[2500][2000];
 
 bool hasPath(int src[], int snk[], int width, int height )
 {
@@ -69,9 +69,27 @@ bool hasPath(int src[], int snk[], int width, int height )
         
 }
 
-void findCut(int x[], int y[], int t[],int n, int width, int height)
+void findCut(int x[], int y[], int t[], int n, int width, int height)
 {
     int src[2], snk[2];
+    int src2[4][2], snk2[4][2];
+    int k=0, j=0;
+    for(int i=0; i<4; i++)
+    {
+        if(t[i]==1)
+        {
+            src2[k][0] = y[i];
+            src2[k][1] = x[i];
+            k++;
+        }
+        else
+        {
+            snk2[j][0] = y[i];
+            snk2[j][1] = x[i];
+            j++;
+        }
+        
+    }
     src[0] = y[0];
     src[1] = x[0];
     snk[0] = y[1];
@@ -202,7 +220,7 @@ int main( int argc, char** argv )
     out_image= grad.clone();
     int maxVal = 9999;
     out_image = grad.clone();
-    int p[height][width];
+    int p[height+1][width+1];
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
         {
@@ -300,7 +318,10 @@ int main( int argc, char** argv )
             vis[j][i] = false;
         }
     queue <pair<int, int> > q;
-    pair<int, int> p1 = make_pair(y1[0], x1[0]);
+    int i=0;
+    while(t1[i]!=1)
+        i++;
+    pair<int, int> p1 = make_pair(y1[i], x1[i]);
     q.push(p1);
     int x, y;
     Mat out_image2 = Mat::zeros(out_image.rows, out_image.cols, CV_8UC3);

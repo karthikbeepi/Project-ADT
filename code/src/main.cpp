@@ -8,8 +8,10 @@ using namespace std;
 int edgeVal[2500][2000][4];
 int parent[2500][2000];
 bool vis[2500][2000];
+int src2[100][2], snk2[100][2];
+int srcCount=0, snkCount=0;
 
-bool hasPath(int src[], int snk[], int width, int height )
+bool hasPath( int width, int height )
 {
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
@@ -18,9 +20,18 @@ bool hasPath(int src[], int snk[], int width, int height )
         }
 
     queue <pair<int, int> > q;
-    pair<int, int> p1 = make_pair(src[0], src[1]);
-    q.push(p1);
-    parent[src[0]][src[1]] = -1;
+    pair<int, int> p1; /*= make_pair(src2[0][0], src2[0][1]);*/
+    //q.push(p1);
+    int a=0;
+    while(a<srcCount)
+    {
+        p1 = make_pair(src2[a][0], src2[a][1]);
+        q.push(p1);
+        parent[src2[a][0]][src2[a][1]] = -1;
+        a++;
+        //break;
+    }
+    //parent[src2[0][0]][src2[0][1]] = -1;
     while(!q.empty())
     {
         p1 = q.front();
@@ -58,32 +69,68 @@ bool hasPath(int src[], int snk[], int width, int height )
             q.push(p2);
             parent[y][x+1] = 2;
         }
+
+        for(int i=0; i<snkCount; i++)
+        {
+            if(vis[snk2[i][0]][snk2[i][1]]==true)
+                 return true;
+        }
     }
 
-    if(vis[snk[0]][snk[1]]==true)
-        return true;
-        else
-        {
-            return false;
-        }
-        
+    // if(vis[snk2[0][0]][snk2[0][1]]==true)
+    //     return true;
+    // else
+    //     {
+    //         return false;
+    //     }
+    for(int i=0; i<snkCount; i++)
+    {
+        if(vis[snk2[i][0]][snk2[i][1]]==true)
+             return true;
+    }
+    return false;
 }
 
-void findCut(int x[], int y[], int t[],int n, int width, int height)
+void findCut(int x[], int y[], int t[], int n, int width, int height)
 {
     int src[2], snk[2];
-    src[0] = y[0];
-    src[1] = x[0];
-    snk[0] = y[1];
-    snk[1] = x[1];
-    int y1=snk[0], x1=snk[1];
-    while(hasPath(src, snk, width, height))
+    for(int i=0; i<n; i++)
+    {
+        if(t[i]==1)
+        {
+            src2[srcCount][0] = y[i];
+            src2[srcCount][1] = x[i];
+            srcCount++;
+        }
+        else
+        {
+            snk2[snkCount][0] = y[i];
+            snk2[snkCount][1] = x[i];
+            snkCount++;
+        }   
+    }
+
+    // src[0] = y[0];
+    // src[1] = x[0];
+    // snk[0] = y[1];
+    // snk[1] = x[1];
+    while(hasPath(width, height))
     {
         int x1, y1;
-        x1 = snk[1];
-        y1 = snk[0];
+        for(int i=0; i<snkCount; i++)
+        {
+            if(vis[snk2[i][0]][snk2[i][1]]==true)
+            {
+                x1 = snk2[i][1];
+                y1 = snk2[i][0];
+                break;
+            }
+        }
+        //x1 = snk[1];
+        //y1 = snk[0];
         int flow=999;
-        while(x1!=src[1]||y1!=src[0])
+        //while(x1!=src[1]||y1!=src[0])
+        while(parent[y1][x1]!=-1)
         {
             
             int par = parent[y1][x1];
@@ -112,8 +159,19 @@ void findCut(int x[], int y[], int t[],int n, int width, int height)
                 x1++;
             }   
         }
-        x1 = snk[1], y1 = snk[0];
-        while(x1!=src[1]||y1!=src[0])
+
+        for(int i=0; i<snkCount; i++)
+        {
+            if(vis[snk2[i][0]][snk2[i][1]]==true)
+            {
+                x1 = snk2[i][1];
+                y1 = snk2[i][0];
+                break;
+            }
+        }
+
+        //while(x1!=src[1]||y1!=src[0])
+        while(parent[y1][x1]!=-1)
         {
             
             int par = parent[y1][x1];
@@ -189,7 +247,7 @@ int main( int argc, char** argv )
     int scale = 1;
     int delta = 0;
     int ddepth = CV_16S;
-    GaussianBlur( src, src, Size(3,3), 0, 0, BORDER_DEFAULT );
+    //GaussianBlur( src, src, Size(5,5), 0, 0, BORDER_DEFAULT );
     Mat grad_x, grad_y, grad;
     Mat abs_grad_x, abs_grad_y;
     Scharr( src, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
@@ -290,7 +348,7 @@ int main( int argc, char** argv )
             return -1;
         }
     }
-
+    
     findCut(x1, y1, t1, n, width, height);
 
     bool vis[height][width];
@@ -349,7 +407,7 @@ int main( int argc, char** argv )
 
     
     // write it on disk
-    imwrite( argv[3], out_image);
+    imwrite( argv[3], out_image2);
     
     // also display them both
     namedWindow( "Original image", WINDOW_AUTOSIZE );
