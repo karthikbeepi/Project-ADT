@@ -365,6 +365,7 @@ int main( int argc, char** argv )
     q.push(p1);
     int x, y;
     Mat out_image2 = Mat::zeros(out_image.rows, out_image.cols, CV_8UC3);
+
     while(!q.empty())
     {
             p1 = q.front();
@@ -404,43 +405,6 @@ int main( int argc, char** argv )
                 q.push(p1);
             }
     }
-
-    // while(t1[i]==1)
-    // {
-    //         x = x1[i];
-    //         y = y1[i];
-    //         queue <pair<int, int> > q;
-    //         pair<int, int> p1 = make_pair(y, x);
-    //         q.push(p1);            
-    //         while(!q.empty())
-    //         {
-    //             p1 = q.front();
-    //             q.pop();
-    //             y = p1.first;
-    //             x = p1.second;
-    //             if(p[y][x]==0||x<0 || x>=width || y<0 || y>=height)
-    //             {
-    //                 continue;
-    //             }
-    //             Vec3b pixel;
-    //             pixel[1] = 255;
-    //             pixel[2] = 255;
-    //             pixel[0] = 255; 
-    //             out_image2.at<Vec3b>(y, x) = pixel;
-    //             p[y][x] = 0;
-    //             p1.first = y+1;
-    //             q.push(p1);
-    //             p1.first = y-1;
-    //             q.push(p1);
-    //             p1.first = y;
-    //             p1.second = x+1;
-    //             q.push(p1);
-    //             p1.second = x-1;
-    //             q.push(p1);
-                
-    //         }
-    // i++;
-    //     }
     
     // write it on disk
     imwrite( argv[3], out_image2);

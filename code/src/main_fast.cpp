@@ -4,67 +4,6 @@
 
 using namespace cv;
 using namespace std;
-#define V 6 
-
-class Graph{
-
-	public:
-	bool hasPath(int g[V][V], int parent[], int s, int t) 
-	{ 
-		bool vis[V]; 
-		for(int i=0; i<V; i++)
-			vis[i]=false;
-		queue <int> q; 
-		q.push(s); 
-		vis[s] = true; 
-		parent[s] = -1; 
-		while (!q.empty()) 
-		{ 
-			int u = q.front(); 
-			q.pop(); 
-
-			for (int v=0; v<V; v++) 
-			{ 
-				if (vis[v]==false && g[u][v] > 0) 
-				{ 
-					q.push(v); 
-					parent[v] = u; 
-					vis[v] = true; 
-				} 
-			} 
-		} 
-
-		return (vis[t] == true); 
-	} 
-	int findMinCut(int g[V][V], int src, int snk) 
-	{ 
-		int u,v;
-		int graph[V][V];
-		for (int i = 0; i < V; i++) 
-			for (int j = 0; j < V; j++) 
-				graph[i][j] = g[i][j]; 
-		int parent[V]; 
-		int flow = 0; 
-		while (hasPath(graph, parent, src, snk)) 
-		{ 
-			int path_flow = 9999;
-			for (v=snk; v!=src; v=parent[v]) 
-			{ 
-				u = parent[v]; 
-				path_flow = min(path_flow, graph[u][v]); 
-			} 
-			for (v=snk; v != src; v=parent[v]) 
-			{ 
-				u = parent[v]; 
-				graph[u][v] -= path_flow; 
-				graph[v][u] += path_flow; 
-			} 
-			flow += path_flow; 
-		} 
-		return flow; 
-	}
-} ;
-
 
 int main( int argc, char** argv )
 {
@@ -134,16 +73,6 @@ int main( int argc, char** argv )
                 p[j][i]=0;
             }
         }
-        // ofstream fout;
-        // fout.open("test.txt"); 
-        // for(int i=0; i<width; i++)
-        // {
-        //     for(int j=0; j<height; j++)
-        //     {
-        //         fout<<p[j][i];
-        //     }
-        //     fout<<"\n";
-        // }
     
     Mat out_image2;
     out_image2 = Mat::zeros(out_image.rows, out_image.cols, CV_8UC3);
