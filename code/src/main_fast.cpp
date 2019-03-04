@@ -1,3 +1,4 @@
+//This is an implementation without the use of mincut-maxflow but finds the fastest edges faster and more efficient. 
 #include <opencv2/opencv.hpp>
 #include<iostream>
 #include<fstream>

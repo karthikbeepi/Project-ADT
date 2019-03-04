@@ -1,3 +1,6 @@
+/*This implementation was made by Karthik B P from Concordia University*/
+//This implementation gives faster results if more points in the image are given.
+/* https://www.geeksforgeeks.org/ford-fulkerson-algorithm-for-maximum-flow-problem for understanding Ford-Fulkerson algorithm */
 #include <opencv2/opencv.hpp>
 #include<iostream>
 #include<fstream>
@@ -5,14 +8,17 @@
 using namespace cv;
 using namespace std;
 
-int edgeVal[2500][2000][4];
-int parent[2500][2000];
-bool vis[2500][2000];
-int src2[100][2], snk2[100][2];
-int srcCount=0, snkCount=0;
+int edgeVal[2500][2000][4];    //Edge length of the pixels. Here we leveraged the fact that a pixel can have only 4 neighbors.
+int parent[2500][2000];         //The array for storing the parent of each pixel when visited by BFS.
+bool vis[2500][2000];           //The array for keeping track whether a pixel has been visited or not.
+int src2[100][2], snk2[100][2]; //Source and sink points for the image.
+int srcCount=0, snkCount=0;     //Count of source and sink points.
 
+
+/*This method is responsible for finding a path between the sources and sinks if present */
 bool hasPath( int width, int height )
 {
+    //Make everything unvisited.
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
         {
@@ -20,24 +26,26 @@ bool hasPath( int width, int height )
         }
 
     queue <pair<int, int> > q;
-    pair<int, int> p1; /*= make_pair(src2[0][0], src2[0][1]);*/
-    //q.push(p1);
+    pair<int, int> p1; 
     int a=0;
+
+    //Add all the sources
     while(a<srcCount)
     {
         p1 = make_pair(src2[a][0], src2[a][1]);
         q.push(p1);
         parent[src2[a][0]][src2[a][1]] = -1;
         a++;
-        //break;
     }
-    //parent[src2[0][0]][src2[0][1]] = -1;
+
+    //Find paths
     while(!q.empty())
     {
         p1 = q.front();
         q.pop();
         int y = p1.first;
         int x = p1.second;
+
         if(vis[y][x]==true||x<0 || x>=width || y<0 || y>=height)
             continue;
 
@@ -70,6 +78,7 @@ bool hasPath( int width, int height )
             parent[y][x+1] = 2;
         }
 
+        //Even if 1 sink was reached there is a path available.
         for(int i=0; i<snkCount; i++)
         {
             if(vis[snk2[i][0]][snk2[i][1]]==true)
@@ -77,23 +86,16 @@ bool hasPath( int width, int height )
         }
     }
 
-    // if(vis[snk2[0][0]][snk2[0][1]]==true)
-    //     return true;
-    // else
-    //     {
-    //         return false;
-    //     }
-    for(int i=0; i<snkCount; i++)
-    {
-        if(vis[snk2[i][0]][snk2[i][1]]==true)
-             return true;
-    }
+    //If no path found 
     return false;
 }
 
+
+//This method is responsible for finding the Mincut from the paths found. 
 void findCut(int x[], int y[], int t[], int n, int width, int height)
 {
     int src[2], snk[2];
+    //Intialise all the sources and sinks.
     for(int i=0; i<n; i++)
     {
         if(t[i]==1)
@@ -110,10 +112,7 @@ void findCut(int x[], int y[], int t[], int n, int width, int height)
         }   
     }
 
-    // src[0] = y[0];
-    // src[1] = x[0];
-    // snk[0] = y[1];
-    // snk[1] = x[1];
+    //Find mincuts for all paths found.
     while(hasPath(width, height))
     {
         int x1, y1;
@@ -126,10 +125,7 @@ void findCut(int x[], int y[], int t[], int n, int width, int height)
                 break;
             }
         }
-        //x1 = snk[1];
-        //y1 = snk[0];
         int flow=999;
-        //while(x1!=src[1]||y1!=src[0])
         while(parent[y1][x1]!=-1)
         {
             
@@ -247,19 +243,19 @@ int main( int argc, char** argv )
     int scale = 1;
     int delta = 0;
     int ddepth = CV_16S;
-    //GaussianBlur( src, src, Size(5,5), 0, 0, BORDER_DEFAULT );
+    GaussianBlur( src, src, Size(5,5), 0, 0, BORDER_DEFAULT );
     Mat grad_x, grad_y, grad;
     Mat abs_grad_x, abs_grad_y;
     Scharr( src, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
-    //Sobel( src, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
     convertScaleAbs( grad_x, abs_grad_x );
     Scharr( src, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
-    //Sobel( src, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
     convertScaleAbs( grad_y, abs_grad_y );
     addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
     out_image= grad.clone();
     int maxVal = 9999;
     out_image = grad.clone();
+
+
     int p[height+1][width+1];
     for(int i=0; i<width; i++)
         for(int j=0; j<height; j++)
@@ -275,6 +271,7 @@ int main( int argc, char** argv )
             }
         }
     
+    //Weight assignment.
     for(int i=0; i<width; i++)
     {
         for(int j=0; j<height; j++)
@@ -366,6 +363,7 @@ int main( int argc, char** argv )
     int x, y;
     Mat out_image2 = Mat::zeros(out_image.rows, out_image.cols, CV_8UC3);
 
+    //Find the foreground and background from a single sink.
     while(!q.empty())
     {
             p1 = q.front();

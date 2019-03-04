@@ -1,3 +1,4 @@
+/* https://www.geeksforgeeks.org/ford-fulkerson-algorithm-for-maximum-flow-problem for understanding Ford-Fulkerson algorithm */
 #include <opencv2/opencv.hpp>
 #include<iostream>
 #include<fstream>
@@ -77,12 +78,6 @@ bool hasPath( int width, int height )
         }
     }
 
-    // if(vis[snk2[0][0]][snk2[0][1]]==true)
-    //     return true;
-    // else
-    //     {
-    //         return false;
-    //     }
     for(int i=0; i<snkCount; i++)
     {
         if(vis[snk2[i][0]][snk2[i][1]]==true)
@@ -110,10 +105,6 @@ void findCut(int x[], int y[], int t[], int n, int width, int height)
         }   
     }
 
-    // src[0] = y[0];
-    // src[1] = x[0];
-    // snk[0] = y[1];
-    // snk[1] = x[1];
     while(hasPath(width, height))
     {
         int x1, y1;
@@ -126,10 +117,7 @@ void findCut(int x[], int y[], int t[], int n, int width, int height)
                 break;
             }
         }
-        //x1 = snk[1];
-        //y1 = snk[0];
         int flow=999;
-        //while(x1!=src[1]||y1!=src[0])
         while(parent[y1][x1]!=-1)
         {
             
