@@ -354,16 +354,21 @@ int main( int argc, char** argv )
         {
             vis[j][i] = false;
         }
-    queue <pair<int, int> > q;
+
+    
     int i=0;
-    while(t1[i]!=1)
-        i++;
-    pair<int, int> p1 = make_pair(y1[i], x1[i]);
-    q.push(p1);
     int x, y;
     Mat out_image2 = Mat::zeros(out_image.rows, out_image.cols, CV_8UC3);
-
-    //Find the foreground and background from a single sink.
+    for(int k=0; k<n; k++)
+    {
+        if(t1[k]!=1)
+        {
+            continue;
+        }
+    
+    queue <pair<int, int> > q;
+    pair<int, int> p1 = make_pair(y1[k], x1[k]);
+    q.push(p1);
     while(!q.empty())
     {
             p1 = q.front();
@@ -402,6 +407,7 @@ int main( int argc, char** argv )
                 p1.second = x-1;
                 q.push(p1);
             }
+    }
     }
     
     // write it on disk
