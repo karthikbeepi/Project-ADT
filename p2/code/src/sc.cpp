@@ -55,6 +55,7 @@ bool seam_carving_perfected(Mat& in_image, int new_width, int new_height, Mat& o
     //     }
     // }
 
+    reduce_horizontal_seam_trivial(iimage, oimage);
    
     
     out_image = oimage.clone();
@@ -71,7 +72,7 @@ bool seam_carving_perfected(Mat& in_image, int new_width, int new_height, Mat& o
     convertScaleAbs( grad_y, abs_grad_y );
     addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
 
-    namedWindow( "Edge detection image", WINDOW_AUTOSIZE );
+    namedWindow("Edge detection image", WINDOW_AUTOSIZE );
 
     out_image = grad.clone();
     imshow( "Seam Carved Image", out_image );
@@ -95,11 +96,10 @@ bool reduce_horizontal_seam_trivial(Mat& in_image, Mat& out_image){
         for(int j=0;j<cols;++j){
             Vec3b pixel = in_image.at<Vec3b>(i, j);
             
-            /* at operator is r/w
             pixel[0] = 255;
             pixel[1] =255;
             pixel[2]=255;
-            */
+            
             
             
             
