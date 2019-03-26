@@ -1,0 +1,3 @@
+/home/kbeepi/Project-ADT/p2/code/build/CMakeFiles/rebuild_cache.dir
+/home/kbeepi/Project-ADT/p2/code/build/CMakeFiles/sc.dir
+/home/kbeepi/Project-ADT/p2/code/build/CMakeFiles/edit_cache.dir

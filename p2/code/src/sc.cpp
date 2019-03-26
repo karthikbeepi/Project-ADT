@@ -33,29 +33,48 @@ bool seam_carving(Mat& in_image, int new_width, int new_height, Mat& out_image){
     }
 
     
-    return seam_carving_trivial(in_image, new_width, new_height, out_image);
+    return seam_carving_perfected(in_image, new_width, new_height, out_image);
 }
 
 
 // seam carves by removing trivial seams
-bool seam_carving_trivial(Mat& in_image, int new_width, int new_height, Mat& out_image){
+bool seam_carving_perfected(Mat& in_image, int new_width, int new_height, Mat& out_image){
 
     Mat iimage = in_image.clone();
     Mat oimage = in_image.clone();
-    while(iimage.rows!=new_height || iimage.cols!=new_width){
-        // horizontal seam if needed
-        if(iimage.rows>new_height){
-            reduce_horizontal_seam_trivial(iimage, oimage);
-            iimage = oimage.clone();
-        }
+    // while(iimage.rows!=new_height || iimage.cols!=new_width){
+    //     // horizontal seam if needed
+    //     if(iimage.rows>new_height){
+    //         reduce_horizontal_seam_trivial(iimage, oimage);
+    //         iimage = oimage.clone();
+    //     }
         
-        if(iimage.cols>new_width){
-            reduce_vertical_seam_trivial(iimage, oimage);
-            iimage = oimage.clone();
-        }
-    }
+    //     if(iimage.cols>new_width){
+    //         reduce_vertical_seam_trivial(iimage, oimage);
+    //         iimage = oimage.clone();
+    //     }
+    // }
+
+   
     
     out_image = oimage.clone();
+
+    int scale = 1;
+    int delta = 0;
+    int ddepth = CV_16S;
+    GaussianBlur( out_image, out_image, Size(5,5), 0, 0, BORDER_DEFAULT );
+    Mat grad_x, grad_y, grad;
+    Mat abs_grad_x, abs_grad_y;
+    Scharr( out_image, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
+    convertScaleAbs( grad_x, abs_grad_x );
+    Scharr( out_image, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
+    convertScaleAbs( grad_y, abs_grad_y );
+    addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
+
+    namedWindow( "Edge detection image", WINDOW_AUTOSIZE );
+
+    out_image = grad.clone();
+    imshow( "Seam Carved Image", out_image );
     return true;
 }
 

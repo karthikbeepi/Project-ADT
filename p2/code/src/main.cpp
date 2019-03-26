@@ -34,6 +34,7 @@ int main( int argc, char** argv )
     
     // the output image
     Mat out_image;
+
     
     if(!seam_carving(in_image, new_width, new_height, out_image)){
         return -1;

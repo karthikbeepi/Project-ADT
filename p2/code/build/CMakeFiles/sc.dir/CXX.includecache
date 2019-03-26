@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/kbeepi/Project-ADT/p2/code/src/main.cpp
+opencv2/opencv.hpp
+-
+sc.h
+/home/kbeepi/Project-ADT/p2/code/src/sc.h
+
+/home/kbeepi/Project-ADT/p2/code/src/sc.cpp
+sc.h
+/home/kbeepi/Project-ADT/p2/code/src/sc.h
+
+/home/kbeepi/Project-ADT/p2/code/src/sc.h
+opencv2/opencv.hpp
+-
+
