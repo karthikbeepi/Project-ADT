@@ -1,3 +1,4 @@
+//https://docs.opencv.org/2.4/doc/tutorials/imgproc/imgtrans/sobel_derivatives/sobel_derivatives.html was used for learning Scharr
 #include "sc.h"
 
 using namespace cv;
@@ -5,7 +6,7 @@ using namespace std;
 
 int min3 (int a, int b, int c)
 {
-	return (a<b)?((a<c)?a:c):((b<c)?b:c);
+	return (a<=b)?((a<=c)?a:c):((b<=c)?b:c);
 }
 
 bool seam_carving(Mat& in_image, int new_width, int new_height,
@@ -114,7 +115,6 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image) {
 	}
 
 	//find the lowest seam energy from the last column
-    int newheight = height - 1;
     int lowestSeamEnergy = seamEnergy[0][width - 1];
 	int minRow = 0;
 	for (int y=1; y<height; y++) 
@@ -126,15 +126,14 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image) {
 		}
 	}
 	int index = minRow;
-	int currentMin;
 	for (int x=width-1; x>=0; x--) 
 	{
-		int yIndex = 0;
+		int y_index = 0;
 		for (int y=0; y<height; y++) 
 		{
-			out_image.at<Vec3b>(yIndex, x) = in_image.at<Vec3b>(y,x);
+			out_image.at<Vec3b>(y_index, x) = in_image.at<Vec3b>(y,x);
 			if (y!=index) 
-					yIndex++;
+					y_index++;
 		}
 			
 				
@@ -171,7 +170,7 @@ bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image) {
 	out_image = Mat(height, width, CV_8UC3);
 
 	Mat grad;
-    int seamEnergy[height][width];
+    int seamEnergy[height][width+1];
     Mat src_gray;
 	Mat blur_src;
 	GaussianBlur(in_image, blur_src, Size(3, 3), 0, 0, BORDER_DEFAULT);
@@ -187,7 +186,9 @@ bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image) {
 	uchar diffEnergy[grad.rows][grad.cols];
 	for(int x=0; x<grad.cols; x++)
 		for(int y=0; y<grad.rows; y++)
+		{
 			diffEnergy[y][x] = grad.at<uchar>(y,x);
+		}
 
 	for(int x=0;x<grad.cols;x++)
 		seamEnergy[0][x] = diffEnergy[0][x];
@@ -202,7 +203,6 @@ bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image) {
 			else 
 				seamEnergy[y][x] = diffEnergy[y][x] + min3( seamEnergy[y-1][x-1], seamEnergy[y-1][x], seamEnergy[y-1][x+1]);
 		}
-	int newwidth = width - 1;
     int lowestSeamEnergy = seamEnergy[height-1][0];
 	int minCol = 0;
 	for (int x = 1; x < width; x++)
@@ -212,32 +212,32 @@ bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image) {
 			minCol = x;
 		}
 	int index = minCol;
-	for (int y = height - 1; y >= 0; y--) 
+	for (int y=height-1; y>=0; y--) 
 	{
-		int xIndex = 0;
-		for (int x = 0; x < width; ++x) 
+		int x_index = 0;
+		for (int x=0; x<width; x++) 
 		{
-			out_image.at<Vec3b>(y, xIndex) = in_image.at<Vec3b>(y,x);
+			out_image.at<Vec3b>(y, x_index) = in_image.at<Vec3b>(y,x);
 			if (x != index) 
-				xIndex++;
+				x_index++;
 		}
 		
-		if (y > 0) 
-			if (index == 0) 
+		if (y>0) 
+			if (index==0) 
 			{
-				if (seamEnergy[y-1][index+1]  < seamEnergy[y-1][index]) 
+				if (seamEnergy[y-1][index+1]<seamEnergy[y-1][index]) 
 					index++;
 			} 
-			else if (index == width - 1) 
+			else if (index==width-1) 
 			{
-				if (seamEnergy[y-1][index-1] < seamEnergy[y-1][index]) 
+				if (seamEnergy[y-1][index-1]<seamEnergy[y-1][index]) 
 					index--;
 			} 
 			else 
 			{
-				if (seamEnergy[y-1][index-1] < min(seamEnergy[y-1][index], seamEnergy[y-1][index+1])) 
+				if (seamEnergy[y-1][index-1]<min(seamEnergy[y-1][index], seamEnergy[y-1][index+1])) 
 					index--;
-				else if (seamEnergy[y-1][index+1] < min(seamEnergy[y-1][index-1], seamEnergy[y-1][index])) 
+				else if (seamEnergy[y-1][index+1]<min(seamEnergy[y-1][index-1], seamEnergy[y-1][index])) 
 					index++;
 			}
 	}
