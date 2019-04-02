@@ -1,167 +1,245 @@
-
 #include "sc.h"
 
 using namespace cv;
 using namespace std;
 
-
-
-
-bool seam_carving(Mat& in_image, int new_width, int new_height, Mat& out_image){
-
-    // some sanity checks
-    // Check 1 -> new_width <= in_image.cols
-    if(new_width>in_image.cols){
-        cout<<"Invalid request!!! new_width has to be smaller than the current size!"<<endl;
-        return false;
-    }
-    if(new_height>in_image.rows){
-        cout<<"Invalid request!!! ne_height has to be smaller than the current size!"<<endl;
-        return false;
-    }
-    
-    if(new_width<=0){
-        cout<<"Invalid request!!! new_width has to be positive!"<<endl;
-        return false;
-
-    }
-    
-    if(new_height<=0){
-        cout<<"Invalid request!!! new_height has to be positive!"<<endl;
-        return false;
-        
-    }
-
-    
-    return seam_carving_perfected(in_image, new_width, new_height, out_image);
+int min3 (int a, int b, int c)
+{
+	return (a<b)?((a<c)?a:c):((b<c)?b:c);
 }
 
+bool seam_carving(Mat& in_image, int new_width, int new_height,
+		Mat& out_image) {
+
+	// some sanity checks
+	// Check 1 -> new_width <= in_image.width
+	if (new_width > in_image.cols) {
+		cout
+				<< "Invalid request!!! new_width has to be smaller than the current size!"
+				<< endl;
+		return false;
+	}
+	if (new_height > in_image.rows) {
+		cout
+				<< "Invalid request!!! ne_height has to be smaller than the current size!"
+				<< endl;
+		return false;
+	}
+
+	if (new_width <= 0) {
+		cout << "Invalid request!!! new_width has to be positive!" << endl;
+		return false;
+
+	}
+
+	if (new_height <= 0) {
+		cout << "Invalid request!!! new_height has to be positive!" << endl;
+		return false;
+
+	}
+
+	return seam_carving_perfected(in_image, new_width, new_height, out_image);
+}
 
 // seam carves by removing trivial seams
-bool seam_carving_perfected(Mat& in_image, int new_width, int new_height, Mat& out_image){
+bool seam_carving_perfected(Mat& in_image, int new_width, int new_height,
+		Mat& out_image) {
 
-    Mat iimage = in_image.clone();
-    Mat oimage = in_image.clone();
-    // while(iimage.rows!=new_height || iimage.cols!=new_width){
-    //     // horizontal seam if needed
-    //     if(iimage.rows>new_height){
-    //         reduce_horizontal_seam_trivial(iimage, oimage);
-    //         iimage = oimage.clone();
-    //     }
-        
-    //     if(iimage.cols>new_width){
-    //         reduce_vertical_seam_trivial(iimage, oimage);
-    //         iimage = oimage.clone();
-    //     }
-    // }
+	Mat iimage = in_image.clone();
+	Mat oimage = in_image.clone();
+	while (iimage.rows != new_height || iimage.cols != new_width) {
+		// horizontal seam if needed
+		if (iimage.rows > new_height) {
+			reduce_horizontal_seam_perfected(iimage, oimage);
+			iimage = oimage.clone();
+		}
 
-    reduce_horizontal_seam_trivial(iimage, oimage);
-   
-    
-    out_image = oimage.clone();
+		if (iimage.cols > new_width) {
+			reduce_vertical_seam_perfected(iimage, oimage);
+			iimage = oimage.clone();
+		}
+	}
 
-    int scale = 1;
-    int delta = 0;
-    int ddepth = CV_16S;
-    GaussianBlur( out_image, out_image, Size(5,5), 0, 0, BORDER_DEFAULT );
-    Mat grad_x, grad_y, grad;
-    Mat abs_grad_x, abs_grad_y;
-    Scharr( out_image, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
-    convertScaleAbs( grad_x, abs_grad_x );
-    Scharr( out_image, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
-    convertScaleAbs( grad_y, abs_grad_y );
-    addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
-
-    namedWindow("Edge detection image", WINDOW_AUTOSIZE );
-
-    out_image = grad.clone();
-    imshow( "Seam Carved Image", out_image );
-    return true;
+	out_image = oimage.clone();
+	return true;
 }
 
 // horizontl trivial seam is a seam through the center of the image
-bool reduce_horizontal_seam_trivial(Mat& in_image, Mat& out_image){
+bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image) {
 
-    // retrieve the dimensions of the new image
-    int rows = in_image.rows-1;
-    int cols = in_image.cols;
-    
-    // create an image slighly smaller
-    out_image = Mat(rows, cols, CV_8UC3);
-    
-    //populate the image
-    int middle = in_image.rows / 2;
-    
-    for(int i=0;i<=middle;++i)
-        for(int j=0;j<cols;++j){
-            Vec3b pixel = in_image.at<Vec3b>(i, j);
-            
-            pixel[0] = 255;
-            pixel[1] =255;
-            pixel[2]=255;
-            
-            
-            
-            
-            out_image.at<Vec3b>(i,j) = pixel;
-        }
-    
-    for(int i=middle+1;i<rows;++i)
-        for(int j=0;j<cols;++j){
-            Vec3b pixel = in_image.at<Vec3b>(i+1, j);
-            
-            /* at operator is r/w
-             pixel[0] --> red
-             pixel[1] --> green
-             pixel[2] --> blue
-             */
-            
-            
-            out_image.at<Vec3b>(i,j) = pixel;
-        }
+	// retrieve the dimensions of the new image
+	int height = in_image.rows - 1;
+	int width = in_image.cols;
 
-    return true;
+	// create an image slighly smaller
+	out_image = Mat(height, width, CV_8UC3);
+
+	Mat grad;
+	int seamEnergy[height+1][width];
+	Mat src_gray;
+	Mat blur_src;
+	GaussianBlur(in_image, blur_src, Size(3, 3), 0, 0, BORDER_DEFAULT);
+	cvtColor(blur_src, src_gray, COLOR_BGR2GRAY);
+	Mat xGradient, yGradient;
+	Mat xGradientAbs, yGradientAbs;
+	Scharr(src_gray, xGradient, CV_16S, 1, 0, 1, 0, BORDER_DEFAULT);
+	Scharr(src_gray, yGradient, CV_16S, 0, 1, 1, 0, BORDER_DEFAULT);
+	convertScaleAbs(xGradient, xGradientAbs);
+	convertScaleAbs(yGradient, yGradientAbs);
+	addWeighted(xGradientAbs, 0.5, yGradientAbs, 0.5, 0, grad);
+
+	//store the gradient values in a 2D array
+	uchar diffEnergy[grad.rows][grad.cols];
+	for(int x=0; x<grad.cols; x++)
+		for(int y=0; y<grad.rows; y++)
+			diffEnergy[y][x] = grad.at<uchar>(y,x);
+
+	//find the seam energy for first column
+	for(int y=0;y<grad.rows;y++)
+			seamEnergy[y][0] = diffEnergy[y][0];
+		
+	
+	//find the total seam energy
+	for(int x=1;x<grad.cols;x++)
+	{
+		for(int y=0;y<grad.rows;y++)
+		{
+			if(y==0)
+				seamEnergy[y][x] = diffEnergy[y][x] + min(seamEnergy[y][x-1], seamEnergy[y+1][x-1]);
+			else if(y==grad.rows-1)
+				seamEnergy[y][x] = diffEnergy[y][x]+ min(seamEnergy[y][x-1], seamEnergy[y-1][x-1]);
+			else
+				seamEnergy[y][x] = diffEnergy[y][x] +  min3(seamEnergy[y][x-1], seamEnergy[y-1][x-1], seamEnergy[y+1][x-1]);
+		}
+	}
+
+	//find the lowest seam energy from the last column
+    int newheight = height - 1;
+    int lowestSeamEnergy = seamEnergy[0][width - 1];
+	int minRow = 0;
+	for (int y=1; y<height; y++) 
+	{
+		if (lowestSeamEnergy>seamEnergy[y][width-1]) 
+		{
+			lowestSeamEnergy=seamEnergy[y][width-1];
+			minRow = y;
+		}
+	}
+	int index = minRow;
+	int currentMin;
+	for (int x=width-1; x>=0; x--) 
+	{
+		int yIndex = 0;
+		for (int y=0; y<height; y++) 
+		{
+			out_image.at<Vec3b>(yIndex, x) = in_image.at<Vec3b>(y,x);
+			if (y!=index) 
+					yIndex++;
+		}
+			
+				
+		if (x > 0) 
+		{
+			if (index == 0) 
+				if (seamEnergy[index+1][x-1]< seamEnergy[index][x-1]) 
+					index++;
+			
+			else if (index == height - 1) 
+				if (seamEnergy[index-1][x-1] < seamEnergy[index][x-1])
+					index--;
+			
+			else 
+			{
+				if (seamEnergy[index-1][x-1] < min(seamEnergy[index][x-1],seamEnergy[index+1][x-1])) 
+					index--;
+				else if (seamEnergy[index+1][x-1] < min(seamEnergy[index-1][x-1], seamEnergy[index][x-1])) {
+					index++;
+			}
+		}
+	}
+	}
+	return true;
 }
 
 // vertical trivial seam is a seam through the center of the image
-bool reduce_vertical_seam_trivial(Mat& in_image, Mat& out_image){
-    // retrieve the dimensions of the new image
-    int rows = in_image.rows;
-    int cols = in_image.cols-1;
-    
-    // create an image slighly smaller
-    out_image = Mat(rows, cols, CV_8UC3);
-    
-    //populate the image
-    int middle = in_image.cols / 2;
-    
-    for(int i=0;i<rows;++i)
-        for(int j=0;j<=middle;++j){
-            Vec3b pixel = in_image.at<Vec3b>(i, j);
-            
-            /* at operator is r/w
-             pixel[0] --> red
-             pixel[1] --> green
-             pixel[2] --> blue
-             */
-            
-            
-            out_image.at<Vec3b>(i,j) = pixel;
-        }
-    
-    for(int i=0;i<rows;++i)
-        for(int j=middle+1;j<cols;++j){
-            Vec3b pixel = in_image.at<Vec3b>(i, j+1);
-            
-            /* at operator is r/w
-             pixel[0] --> red
-             pixel[1] --> green
-             pixel[2] --> blue
-             */
-            
-            
-            out_image.at<Vec3b>(i,j) = pixel;
-        }
-    
-    return true;
+bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image) {
+	// retrieve the dimensions of the new image
+	int height = in_image.rows;
+	int width = in_image.cols - 1;
+
+	// create an image slighly smaller
+	out_image = Mat(height, width, CV_8UC3);
+
+	Mat grad;
+    int seamEnergy[height][width];
+    Mat src_gray;
+	Mat blur_src;
+	GaussianBlur(in_image, blur_src, Size(3, 3), 0, 0, BORDER_DEFAULT);
+	cvtColor(blur_src, src_gray, COLOR_BGR2GRAY);
+	Mat xGradient, yGradient;
+	Mat xGradientAbs, yGradientAbs;
+	Scharr(src_gray, xGradient, CV_16S, 1, 0, 1, 0, BORDER_DEFAULT);
+	Scharr(src_gray, yGradient, CV_16S, 0, 1, 1, 0, BORDER_DEFAULT);
+	convertScaleAbs(xGradient, xGradientAbs);
+	convertScaleAbs(yGradient, yGradientAbs);
+	addWeighted(xGradientAbs, 0.5, yGradientAbs, 0.5, 0, grad);
+
+	uchar diffEnergy[grad.rows][grad.cols];
+	for(int x=0; x<grad.cols; x++)
+		for(int y=0; y<grad.rows; y++)
+			diffEnergy[y][x] = grad.at<uchar>(y,x);
+
+	for(int x=0;x<grad.cols;x++)
+		seamEnergy[0][x] = diffEnergy[0][x];
+
+	for(int y = 1;y<grad.rows;y++)
+		for(int x=0;x<grad.cols;x++)
+		{
+			if(x==0)
+				seamEnergy[y][x] = diffEnergy[y][x] + min(seamEnergy[y-1][x], seamEnergy[y-1][x+1]);
+			else if(x == grad.cols-1)
+				seamEnergy[y][x] = diffEnergy[y][x] + min(seamEnergy[y-1][x-1], seamEnergy[y-1][x]);
+			else 
+				seamEnergy[y][x] = diffEnergy[y][x] + min3( seamEnergy[y-1][x-1], seamEnergy[y-1][x], seamEnergy[y-1][x+1]);
+		}
+	int newwidth = width - 1;
+    int lowestSeamEnergy = seamEnergy[height-1][0];
+	int minCol = 0;
+	for (int x = 1; x < width; x++)
+		if (lowestSeamEnergy > seamEnergy[height-1][x]) 
+		{
+			lowestSeamEnergy = seamEnergy[height-1][x];
+			minCol = x;
+		}
+	int index = minCol;
+	for (int y = height - 1; y >= 0; y--) 
+	{
+		int xIndex = 0;
+		for (int x = 0; x < width; ++x) 
+		{
+			out_image.at<Vec3b>(y, xIndex) = in_image.at<Vec3b>(y,x);
+			if (x != index) 
+				xIndex++;
+		}
+		
+		if (y > 0) 
+			if (index == 0) 
+			{
+				if (seamEnergy[y-1][index+1]  < seamEnergy[y-1][index]) 
+					index++;
+			} 
+			else if (index == width - 1) 
+			{
+				if (seamEnergy[y-1][index-1] < seamEnergy[y-1][index]) 
+					index--;
+			} 
+			else 
+			{
+				if (seamEnergy[y-1][index-1] < min(seamEnergy[y-1][index], seamEnergy[y-1][index+1])) 
+					index--;
+				else if (seamEnergy[y-1][index+1] < min(seamEnergy[y-1][index-1], seamEnergy[y-1][index])) 
+					index++;
+			}
+	}
+	return true;
 }

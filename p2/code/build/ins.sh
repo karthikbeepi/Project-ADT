@@ -4,4 +4,4 @@ g++ src/main.cpp `pkg-config --cflags --libs opencv`
 cd build/
 cmake ../
 make
-./sc castle.jpg 350 240 castle2.jpg
+./sc rsz_castle.jpg 200 240 testo.jpg
