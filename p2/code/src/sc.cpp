@@ -6,11 +6,11 @@ using namespace std;
 
 int min3 (int a, int b, int c)
 {
-	return (a<=b)?((a<=c)?a:c):((b<=c)?b:c);
+	return (a<b)?((a<c)?a:c):((b<c)?b:c);
 }
 
 bool seam_carving(Mat& in_image, int new_width, int new_height,
-		Mat& out_image) {
+		Mat& out_image, Mat & unch) {
 
 	// some sanity checks
 	// Check 1 -> new_width <= in_image.width
@@ -39,34 +39,36 @@ bool seam_carving(Mat& in_image, int new_width, int new_height,
 
 	}
 
-	return seam_carving_perfected(in_image, new_width, new_height, out_image);
+	return seam_carving_perfected(in_image, new_width, new_height, out_image, unch);
 }
 
 // seam carves by removing trivial seams
 bool seam_carving_perfected(Mat& in_image, int new_width, int new_height,
-		Mat& out_image) {
+		Mat& out_image, Mat& unchangedImage) {
 
 	Mat iimage = in_image.clone();
 	Mat oimage = in_image.clone();
 	while (iimage.rows != new_height || iimage.cols != new_width) {
 		// horizontal seam if needed
 		if (iimage.rows > new_height) {
-			reduce_horizontal_seam_perfected(iimage, oimage);
+			reduce_horizontal_seam_perfected(iimage, oimage, unchangedImage);
 			iimage = oimage.clone();
 		}
 
 		if (iimage.cols > new_width) {
-			reduce_vertical_seam_perfected(iimage, oimage);
+			reduce_vertical_seam_perfected(iimage, oimage, unchangedImage);
 			iimage = oimage.clone();
 		}
 	}
 
 	out_image = oimage.clone();
+	// namedWindow( "Original image with seams", WINDOW_AUTOSIZE );
+    // imshow( "Original image", iimage );
 	return true;
 }
 
 // horizontl trivial seam is a seam through the center of the image
-bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image) {
+bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image, Mat& unch) {
 
 	// retrieve the dimensions of the new image
 	int height = in_image.rows - 1;
@@ -134,9 +136,14 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image) {
 			out_image.at<Vec3b>(y_index, x) = in_image.at<Vec3b>(y,x);
 			if (y!=index) 
 					y_index++;
+			else
+			{
+				Vec3b pix ;
+				pix[0] = pix[1] = pix[2] =0;
+				unch.at<Vec3b>(y,x) = pix;
+			}
 		}
 			
-				
 		if (x > 0) 
 		{
 			if (index == 0) 
@@ -150,7 +157,10 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image) {
 			else 
 			{
 				if (seamEnergy[index-1][x-1] < min(seamEnergy[index][x-1],seamEnergy[index+1][x-1])) 
+				{
 					index--;
+					// cout<<"IND";
+				}
 				else if (seamEnergy[index+1][x-1] < min(seamEnergy[index-1][x-1], seamEnergy[index][x-1])) {
 					index++;
 			}
@@ -161,7 +171,7 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image) {
 }
 
 // vertical trivial seam is a seam through the center of the image
-bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image) {
+bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image, Mat & unch) {
 	// retrieve the dimensions of the new image
 	int height = in_image.rows;
 	int width = in_image.cols - 1;
@@ -220,6 +230,13 @@ bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image) {
 			out_image.at<Vec3b>(y, x_index) = in_image.at<Vec3b>(y,x);
 			if (x != index) 
 				x_index++;
+			// else
+			// {
+			// 	Vec3b pix ;
+			// 	pix[0] = pix[1] = pix[2] =0;
+			// 	unch.at<Vec3b>(y,x) = pix;
+			// }
+			
 		}
 		
 		if (y>0) 
