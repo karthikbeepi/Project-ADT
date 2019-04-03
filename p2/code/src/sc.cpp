@@ -81,7 +81,7 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image, Mat& unch) 
 	int seamEnergy[height+1][width];
 	Mat src_gray;
 	Mat blur_src;
-	GaussianBlur(in_image, blur_src, Size(3, 3), 0, 0, BORDER_DEFAULT);
+	GaussianBlur(in_image, blur_src, Size(15, 15), 0, 0, BORDER_DEFAULT);
 	cvtColor(blur_src, src_gray, COLOR_BGR2GRAY);
 	Mat xGradient, yGradient;
 	Mat xGradientAbs, yGradientAbs;
@@ -126,7 +126,9 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image, Mat& unch) 
 			lowestSeamEnergy=seamEnergy[y][width-1];
 			minRow = y;
 		}
+		
 	}
+	//cout<<lowestSeamEnergy<<endl;
 	int index = minRow;
 	for (int x=width-1; x>=0; x--) 
 	{
@@ -145,28 +147,25 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image, Mat& unch) 
 		}
 			
 		if (x > 0) 
-		{
 			if (index == 0) 
-				if (seamEnergy[index+1][x-1]< seamEnergy[index][x-1]) 
+			{	if (seamEnergy[index+1][x-1]< seamEnergy[index][x-1]) 
 					index++;
-			
+			}
 			else if (index == height - 1) 
-				if (seamEnergy[index-1][x-1] < seamEnergy[index][x-1])
+			{	if (seamEnergy[index-1][x-1] < seamEnergy[index][x-1])
 					index--;
-			
+			}
 			else 
 			{
 				if (seamEnergy[index-1][x-1] < min(seamEnergy[index][x-1],seamEnergy[index+1][x-1])) 
 				{
 					index--;
-					// cout<<"IND";
 				}
 				else if (seamEnergy[index+1][x-1] < min(seamEnergy[index-1][x-1], seamEnergy[index][x-1])) {
 					index++;
+				}
 			}
-		}
-	}
-	}
+	}	
 	return true;
 }
 
@@ -183,7 +182,7 @@ bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image, Mat & unch) {
     int seamEnergy[height][width+1];
     Mat src_gray;
 	Mat blur_src;
-	GaussianBlur(in_image, blur_src, Size(3, 3), 0, 0, BORDER_DEFAULT);
+	GaussianBlur(in_image, blur_src, Size(15, 15), 0, 0, BORDER_DEFAULT);
 	cvtColor(blur_src, src_gray, COLOR_BGR2GRAY);
 	Mat xGradient, yGradient;
 	Mat xGradientAbs, yGradientAbs;
@@ -230,12 +229,12 @@ bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image, Mat & unch) {
 			out_image.at<Vec3b>(y, x_index) = in_image.at<Vec3b>(y,x);
 			if (x != index) 
 				x_index++;
-			// else
-			// {
-			// 	Vec3b pix ;
-			// 	pix[0] = pix[1] = pix[2] =0;
-			// 	unch.at<Vec3b>(y,x) = pix;
-			// }
+			 else
+			 {
+			 	Vec3b pix ;
+			 	pix[0] = pix[1] = pix[2] =0;
+			 	unch.at<Vec3b>(y,x) = pix;
+			 }
 			
 		}
 		
