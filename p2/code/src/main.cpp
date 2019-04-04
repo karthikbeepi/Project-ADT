@@ -36,7 +36,7 @@ int main( int argc, char** argv )
     Mat out_image;
     Mat with_seam=in_image.clone();
     
-    if(!seam_carving(in_image, new_width, new_height, out_image, with_seam)){
+    if(!seam_carving(in_image, new_width, new_height, out_image)){
         return -1;
     }
 
@@ -48,8 +48,8 @@ int main( int argc, char** argv )
     namedWindow( "Original image", WINDOW_AUTOSIZE );
     namedWindow( "Seam Carved Image", WINDOW_AUTOSIZE );
     imshow( "Original image", in_image );
-    namedWindow( "with seam", WINDOW_AUTOSIZE );
-    imshow( "with seam", with_seam );
+    //namedWindow( "with seam", WINDOW_AUTOSIZE );
+    //imshow( "with seam", with_seam );
     imshow( "Seam Carved Image", out_image );
     waitKey(0);
     return 0;

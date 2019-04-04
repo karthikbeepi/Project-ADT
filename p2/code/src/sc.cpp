@@ -10,7 +10,7 @@ int min3 (int a, int b, int c)
 }
 
 bool seam_carving(Mat& in_image, int new_width, int new_height,
-		Mat& out_image, Mat & unch) {
+		Mat& out_image) {
 
 	// some sanity checks
 	// Check 1 -> new_width <= in_image.width
@@ -39,24 +39,24 @@ bool seam_carving(Mat& in_image, int new_width, int new_height,
 
 	}
 
-	return seam_carving_perfected(in_image, new_width, new_height, out_image, unch);
+	return seam_carving_perfected(in_image, new_width, new_height, out_image);
 }
 
 // seam carves by removing trivial seams
 bool seam_carving_perfected(Mat& in_image, int new_width, int new_height,
-		Mat& out_image, Mat& unchangedImage) {
+		Mat& out_image) {
 
 	Mat iimage = in_image.clone();
 	Mat oimage = in_image.clone();
 	while (iimage.rows != new_height || iimage.cols != new_width) {
 		// horizontal seam if needed
 		if (iimage.rows > new_height) {
-			reduce_horizontal_seam_perfected(iimage, oimage, unchangedImage);
+			reduce_horizontal_seam_perfected(iimage, oimage);
 			iimage = oimage.clone();
 		}
 
 		if (iimage.cols > new_width) {
-			reduce_vertical_seam_perfected(iimage, oimage, unchangedImage);
+			reduce_vertical_seam_perfected(iimage, oimage);
 			iimage = oimage.clone();
 		}
 	}
@@ -68,7 +68,7 @@ bool seam_carving_perfected(Mat& in_image, int new_width, int new_height,
 }
 
 // horizontl trivial seam is a seam through the center of the image
-bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image, Mat& unch) {
+bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image) {
 
 	// retrieve the dimensions of the new image
 	int height = in_image.rows - 1;
@@ -81,17 +81,17 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image, Mat& unch) 
 	int seamEnergy[height+1][width];
 	Mat src_gray;
 	Mat blur_src;
-	GaussianBlur(in_image, blur_src, Size(15, 15), 0, 0, BORDER_DEFAULT);
+	GaussianBlur(in_image, blur_src, Size(25, 25), 0, 0, BORDER_DEFAULT);
 	cvtColor(blur_src, src_gray, COLOR_BGR2GRAY);
-	Mat xGradient, yGradient;
-	Mat xGradientAbs, yGradientAbs;
-	Scharr(src_gray, xGradient, CV_16S, 1, 0, 1, 0, BORDER_DEFAULT);
-	Scharr(src_gray, yGradient, CV_16S, 0, 1, 1, 0, BORDER_DEFAULT);
-	convertScaleAbs(xGradient, xGradientAbs);
-	convertScaleAbs(yGradient, yGradientAbs);
-	addWeighted(xGradientAbs, 0.5, yGradientAbs, 0.5, 0, grad);
+	Mat x_diff_grad, y_diff_grad;
+	Mat x_diff_gradAbs, y_diff_gradAbs;
+	Scharr(src_gray, x_diff_grad, CV_16S, 1, 0, 1, 0, BORDER_DEFAULT);
+	Scharr(src_gray, y_diff_grad, CV_16S, 0, 1, 1, 0, BORDER_DEFAULT);
+	convertScaleAbs(x_diff_grad, x_diff_gradAbs);
+	convertScaleAbs(y_diff_grad, y_diff_gradAbs);
+	addWeighted(x_diff_gradAbs, 0.5, y_diff_gradAbs, 0.5, 0, grad);
 
-	//store the gradient values in a 2D array
+	//store the _diff_grad values in a 2D array
 	uchar diffEnergy[grad.rows][grad.cols];
 	for(int x=0; x<grad.cols; x++)
 		for(int y=0; y<grad.rows; y++)
@@ -138,12 +138,6 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image, Mat& unch) 
 			out_image.at<Vec3b>(y_index, x) = in_image.at<Vec3b>(y,x);
 			if (y!=index) 
 					y_index++;
-			else
-			{
-				Vec3b pix ;
-				pix[0] = pix[1] = pix[2] =0;
-				unch.at<Vec3b>(y,x) = pix;
-			}
 		}
 			
 		if (x > 0) 
@@ -170,7 +164,7 @@ bool reduce_horizontal_seam_perfected(Mat& in_image, Mat& out_image, Mat& unch) 
 }
 
 // vertical trivial seam is a seam through the center of the image
-bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image, Mat & unch) {
+bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image) {
 	// retrieve the dimensions of the new image
 	int height = in_image.rows;
 	int width = in_image.cols - 1;
@@ -182,15 +176,15 @@ bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image, Mat & unch) {
     int seamEnergy[height][width+1];
     Mat src_gray;
 	Mat blur_src;
-	GaussianBlur(in_image, blur_src, Size(15, 15), 0, 0, BORDER_DEFAULT);
+	GaussianBlur(in_image, blur_src, Size(25, 25), 0, 0, BORDER_DEFAULT);
 	cvtColor(blur_src, src_gray, COLOR_BGR2GRAY);
-	Mat xGradient, yGradient;
-	Mat xGradientAbs, yGradientAbs;
-	Scharr(src_gray, xGradient, CV_16S, 1, 0, 1, 0, BORDER_DEFAULT);
-	Scharr(src_gray, yGradient, CV_16S, 0, 1, 1, 0, BORDER_DEFAULT);
-	convertScaleAbs(xGradient, xGradientAbs);
-	convertScaleAbs(yGradient, yGradientAbs);
-	addWeighted(xGradientAbs, 0.5, yGradientAbs, 0.5, 0, grad);
+	Mat x_diff_grad, y_diff_grad;
+	Mat x_diff_gradAbs, y_diff_gradAbs;
+	Scharr(src_gray, x_diff_grad, CV_16S, 1, 0, 1, 0, BORDER_DEFAULT);
+	Scharr(src_gray, y_diff_grad, CV_16S, 0, 1, 1, 0, BORDER_DEFAULT);
+	convertScaleAbs(x_diff_grad, x_diff_gradAbs);
+	convertScaleAbs(y_diff_grad, y_diff_gradAbs);
+	addWeighted(x_diff_gradAbs, 0.5, y_diff_gradAbs, 0.5, 0, grad);
 
 	uchar diffEnergy[grad.rows][grad.cols];
 	for(int x=0; x<grad.cols; x++)
@@ -229,12 +223,6 @@ bool reduce_vertical_seam_perfected(Mat& in_image, Mat& out_image, Mat & unch) {
 			out_image.at<Vec3b>(y, x_index) = in_image.at<Vec3b>(y,x);
 			if (x != index) 
 				x_index++;
-			 else
-			 {
-			 	Vec3b pix ;
-			 	pix[0] = pix[1] = pix[2] =0;
-			 	unch.at<Vec3b>(y,x) = pix;
-			 }
 			
 		}
 		
