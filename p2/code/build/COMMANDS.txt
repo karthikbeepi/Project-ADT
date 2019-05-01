@@ -1,0 +1,5 @@
+./sc in0.jpg 500 350 out0.jpg
+./sc in1.jpg 300 300 out1.jpg
+./sc in2.jpg 680 404 out2.jpg
+./sc in4.jpg 720 374 out4.jpg
+
